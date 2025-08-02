@@ -1,35 +1,30 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [word, setWord] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    axios.get('https://wordle-webapi-production.onrender.com/api/DailyWords/today')
+      .then(res => {
+        setWord(res.data.word || 'Kelime yok'); // response { word: "KAVUN" } gibi olmalı
+      })
+      .catch(err => {
+        // API'den gelen hata mesajını al
+        const msg = err.response?.data?.error || 'Sunucu hatası';
+        setError(msg);
+      });
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ textAlign: 'center', paddingTop: '50px' }}>
+      <h1>Wordle Günü</h1>
+      {word && <p>Bugünün kelimesi: <strong>{word}</strong></p>}
+      {error && <p style={{ color: 'red' }}>Hata: {error}</p>}
+      {!word && !error && <p>Yükleniyor...</p>}
+    </div>
+  );
 }
 
-export default App
+export default App;
