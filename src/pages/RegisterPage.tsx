@@ -1,5 +1,6 @@
 import { useState } from "react";
-import api from "../api/axios"; // Doğru import
+import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 interface RegisterForm {
   email: string;
@@ -15,6 +16,7 @@ interface FormErrors {
 }
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState<RegisterForm>({
     email: "",
     password: "",
@@ -25,6 +27,7 @@ const RegisterPage = () => {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [apiError, setApiError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -62,9 +65,16 @@ const RegisterPage = () => {
     if (!validate()) return;
 
     try {
-      const res = await api.post("/api/User/register", form); // DÜZELTİLDİ!
+      setApiError("");
+      const res = await api.post("/User/register", form);
       console.log("✅ Kayıt başarılı:", res.data);
+
+      if (res.data?.token) {
+        localStorage.setItem("token", res.data.token);
+        navigate("/"); // ana sayfaya yönlendir
+      }
     } catch (err: any) {
+      setApiError(err.response?.data?.message || "Beklenmeyen bir hata oluştu.");
       console.error("❌ API hatası:", err.response?.data || err.message);
     }
   };
@@ -72,83 +82,59 @@ const RegisterPage = () => {
   return (
     <div className="max-w-md bg-white rounded shadow p-6 mx-auto mt-16">
       <h2 className="text-2xl font-semibold mb-4 text-center">Kayıt Ol</h2>
+
+      {apiError && (
+        <div className="bg-red-100 text-red-700 p-2 mb-4 rounded text-sm">
+          {apiError}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block mb-1">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          />
+          <input type="email" name="email" value={form.email} onChange={handleChange}
+            className="w-full border rounded px-3 py-2" />
           {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
         </div>
 
         <div>
           <label className="block mb-1">Şifre</label>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          />
+          <input type="password" name="password" value={form.password} onChange={handleChange}
+            className="w-full border rounded px-3 py-2" />
           {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
         </div>
 
         <div>
           <label className="block mb-1">Kullanıcı Adı</label>
-          <input
-            type="text"
-            name="nickname"
-            value={form.nickname}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          />
+          <input type="text" name="nickname" value={form.nickname} onChange={handleChange}
+            className="w-full border rounded px-3 py-2" />
           {errors.nickname && <p className="text-red-500 text-sm">{errors.nickname}</p>}
         </div>
 
         <div>
           <label className="block mb-1">İsim</label>
-          <input
-            type="text"
-            name="firstName"
-            value={form.firstName}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          />
+          <input type="text" name="firstName" value={form.firstName} onChange={handleChange}
+            className="w-full border rounded px-3 py-2" />
           {errors.firstName && <p className="text-red-500 text-sm">{errors.firstName}</p>}
         </div>
 
         <div>
           <label className="block mb-1">Soyisim</label>
-          <input
-            type="text"
-            name="lastName"
-            value={form.lastName}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          />
+          <input type="text" name="lastName" value={form.lastName} onChange={handleChange}
+            className="w-full border rounded px-3 py-2" />
           {errors.lastName && <p className="text-red-500 text-sm">{errors.lastName}</p>}
         </div>
 
         <div className="flex items-center">
-          <input
-            type="checkbox"
-            name="isKvkkAccepted"
-            checked={form.isKvkkAccepted}
-            onChange={handleChange}
-            className="mr-2"
-          />
+          <input type="checkbox" name="isKvkkAccepted" checked={form.isKvkkAccepted} onChange={handleChange}
+            className="mr-2" />
           <label className="text-sm">KVKK metnini okudum ve onaylıyorum.</label>
         </div>
         {errors.isKvkkAccepted && <p className="text-red-500 text-sm">{errors.isKvkkAccepted}</p>}
 
         <button
           type="submit"
-          className="w-full !bg-blue-600 text-white py-2 rounded-lg shadow-md transition duration-200 hover:!bg-blue-700 active:scale-95"
-        >
+          className="w-full !bg-blue-600 text-white py-2 rounded-lg shadow-md transition duration-200 hover:!bg-blue-700 active:scale-95">
           Kayıt Ol
         </button>
       </form>
